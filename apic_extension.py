@@ -61,7 +61,8 @@ class APICSimulator(FluidSimulator):
                 for g in ti.static(range(self.dim)):
                     #normal= -grad_v[k]
                     gradient_k = (self.velocity[k][p + ti.Vector.unit(self.dim, k)] - self.velocity[k][p])/ self.dx
-                    K = np.where(grad_v[k]==1)    
+                    grad_v[k][p] = gradient_k
+                    K = np.where(grad_v[k][p]==1)    
                     
                     for j in ti.static(range(self.dim)):
                        
