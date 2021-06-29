@@ -169,10 +169,10 @@ class FluidSimulator:
     @ti.kernel
     def enforce_boundary(self):
         for I in ti.grouped(self.cell_type):
-            if self.cell_type[I] == utils.SOLID:
-                for k in ti.static(range(self.dim)):
-                    self.velocity[k][I] = 0
-                    self.velocity[k][I + ti.Vector.unit(self.dim, k)] = 0
+             if self.cell_type[I] == utils.SOLID:
+                 for k in ti.static(range(self.dim)):
+                     self.velocity[k][I] = 0
+                     self.velocity[k][I + ti.Vector.unit(self.dim, k)] = 0
 
     def solve_pressure(self, dt, strategy):
         strategy.scale_A = dt / (self.rho * self.dx * self.dx)

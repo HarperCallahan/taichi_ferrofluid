@@ -45,12 +45,32 @@ class APICSimulator(FluidSimulator):
 
         return new_c
 
+                
+                
+                
     @ti.kernel
     def update_from_grid(self):
         for p in range(self.total_mk[None]):
             self.p_v[p] = self.vel_interp(self.p_x[p])
             for k in ti.static(range(self.dim)):
-                self.p_cp[k][p] = self.apic_c(0.5 * (1 - ti.Vector.unit(self.dim, k)), self.p_x[p], self.velocity[k])
+
+                grad_v = ti.Vector.zero(self.real, self.dim)
+                N= 1.5 #change this after we just need a constant for now 
+                e = ti.Matrix.zero(self.real,self.dim,self.dim) #(1/2*(diff(k)/diff(I)+diff(I)/diff(k))
+
+                for k in ti.static(range(self.dim)):
+                    #normal= -grad_v[k]
+                    gradient_k = (self.velocity[k][p + ti.Vector.unit(self.dim, k)] - self.velocity[k])/ self.dx
+                    grad_v[k]=gradient_k 
+                    K = np.where(grad_v[k]==1)    
+                    
+                    for j in ti.static(range(self.dim)):
+                       
+                        for i in ti.static(range(self.dim)):
+                            
+                            e[i,j]=1/2 * (gradient_k)  
+                    u = K*abs(2*e*e)**((N-1)/2)
+                self.p_cp[k][p] = self.apic_c(0.5 * (1 - ti.Vector.unit(self.dim, k))/u, self.p_x[p], self.velocity[k])
 
     @ti.kernel
     def transfer_to_grid(self):
@@ -96,7 +116,7 @@ class APICSimulator(FluidSimulator):
             if self.cell_type[I] == utils.FLUID:
                 for offset in ti.static(ti.grouped(ti.ndrange(*((0, 2), ) * self.dim))):
                     num = ti.atomic_add(self.total_mk[None], 1)
-                    self.p_x[num] = (I + (offset + [ti.random() for _ in ti.static(range(self.dim))]) / 2) * self.dx
+                    self.p_x[num] = (I + (offset + [ti.random() for _ in ti.static(range(self.dim))]) / 2) * self.dx #movement then renewal
                     self.p_v[num] = ti.zero(self.p_v[num])
                     for k in ti.static(range(self.dim)):
                         self.p_cp[k][num] = ti.zero(self.p_cp[k][num])

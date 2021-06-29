@@ -1,6 +1,6 @@
 import taichi as ti
 import utils
-from fluid_simulator import *
+from apic_extension import *
 import numpy as np
 
 @ti.data_oriented
