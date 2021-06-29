@@ -13,7 +13,7 @@ from functools import reduce
 import time
 import numpy as np
 
-ti.init(arch=ti.cuda, kernel_profiler=True)
+ti.init(arch=ti.cpu, kernel_profiler=True)
 
 ADVECT_REDISTANCE = 0
 MARKERS = 1

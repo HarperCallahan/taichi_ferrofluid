@@ -60,8 +60,7 @@ class APICSimulator(FluidSimulator):
 
                 for g in ti.static(range(self.dim)):
                     #normal= -grad_v[k]
-                    gradient_k = (self.velocity[k][p + ti.Vector.unit(self.dim, k)] - self.velocity[k])/ self.dx
-                    grad_v[k]=gradient_k 
+                    gradient_k = (self.velocity[k][p + ti.Vector.unit(self.dim, k)] - self.velocity[k][p])/ self.dx
                     K = np.where(grad_v[k]==1)    
                     
                     for j in ti.static(range(self.dim)):
@@ -69,7 +68,7 @@ class APICSimulator(FluidSimulator):
                         for i in ti.static(range(self.dim)):
                             
                             e[i,j]=1/2 * (gradient_k)  
-                    u = K*abs(2*e*e)**((N-1)/2)
+                    u = K*abs(2*e[i,j]*e[i,j])**((N-1)/2)
                 self.p_cp[k][p] = self.apic_c(0.5 * (1 - ti.Vector.unit(self.dim, k))/u, self.p_x[p], self.velocity[k])
 
     @ti.kernel
@@ -84,7 +83,7 @@ class APICSimulator(FluidSimulator):
                     self.velocity[k][I] /= self.velocity_backup[k][I]
 
     def substep(self, dt):
-        self.level_set.build_from_markers()
+        self.level_set.build_from_markers(self.p_x, self.total_mk)
         self.apply_markers()
 
         for k in range(self.dim):
@@ -97,7 +96,7 @@ class APICSimulator(FluidSimulator):
         self.add_gravity(dt)
         self.enforce_boundary()
 
-        self.solve_pressure(dt)
+        self.solve_pressure(dt, self.strategy)
 
         if self.verbose:
             prs = np.max(self.pressure.to_numpy())
