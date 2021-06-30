@@ -215,19 +215,23 @@ class FluidSimulator:
                         
            
                     else: 
-                        grad_v = ti.Vector.zero(self.real, self.dim)
                         N= 1.334 #corn starch values 
                         K =  14.21
-                        e = ti.Matrix.zero(self.real,self.dim,self.dim) #(1/2*(diff(k)/diff(I)+diff(I)/diff(k)
+                        sum = 0
                         jacobian = ti.Matrix.zero(self.real,self.dim,self.dim)
                         for j in ti.static(range(self.dim)):
                        
-                            for i in ti.static(range(self.dim)):
-                                jacobian[i,j] =  (self.velocity[i][I + ti.Vector.unit(self.dim, j)] - self.velocity[i][I - ti.Vector.unit(self.dim, j)])/(2*self.dx)
+                            for i in ti.static(range(self.dim)): 
+                                jacobian[i,j] =  (self.velocity[i][I + ti.Vector.unit(self.dim, j)] - self.velocity[i][I])/self.dx
                         e=1/2 * (jacobian.transpose() + jacobian) 
-                                     
-                        u = K*abs(2*e*e)**((N-1)/2)
-                        self.velocity[k][I] -= (scale * (self.pressure[I] - self.pressure[I_1]))/u
+                        for j in ti.static(range(self.dim)):
+                       
+                            for i in ti.static(range(self.dim)):
+                                sum+=e[i,j]**2           
+                        u = K*abs(2*sum)**((N-1)/2)
+                        if not u <= 0:
+                            print(u)
+                        self.velocity[k][I] -=(scale * (self.pressure[I] - self.pressure[I_1]))/u 
 
     @ti.func
     def advect(self, I, dst, src, offset, dt):
