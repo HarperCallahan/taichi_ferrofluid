@@ -13,7 +13,7 @@ from functools import reduce
 import time
 import numpy as np
 
-ti.init(arch=ti.cpu, kernel_profiler=True)
+ti.init(arch=ti.cuda, kernel_profiler=True)
 
 ADVECT_REDISTANCE = 0
 MARKERS = 1
@@ -26,9 +26,9 @@ class FluidSimulator:
     def __init__(self,
         dim = 2,
         res = (128, 128),
-        dt = 1.25e-2,
+        dt = 0.75e-2,
         substeps = 1,
-        dx = 1.0,
+        dx = 0.5,
         rho = 1000.0,
         gravity = [0, -9.8],
         p0 = 1e-3,
@@ -222,15 +222,14 @@ class FluidSimulator:
                         for j in ti.static(range(self.dim)):
                        
                             for i in ti.static(range(self.dim)): 
-                                jacobian[i,j] =  (self.velocity[i][I + ti.Vector.unit(self.dim, j)] - self.velocity[i][I])/self.dx
-                        e=1/2 * (jacobian.transpose() + jacobian) 
+                                jacobian[i,j] =  (self.velocity[i][I_1 + ti.Vector.unit(self.dim, j)] - self.velocity[i][I])/self.dx
+                        e=(jacobian.transpose() + jacobian) 
                         for j in ti.static(range(self.dim)):
                        
                             for i in ti.static(range(self.dim)):
                                 sum+=e[i,j]**2           
-                        u = K*abs(2*sum)**((N-1)/2)
-                        if not u <= 0:
-                            print(u)
+                        u = max(K*abs(2*sum)**((N-1)/2), 1)
+
                         self.velocity[k][I] -=(scale * (self.pressure[I] - self.pressure[I_1]))/u 
 
     @ti.func
