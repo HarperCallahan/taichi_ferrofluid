@@ -13,7 +13,7 @@ from functools import reduce
 import time
 import numpy as np
 
-ti.init(arch=ti.cuda, kernel_profiler=True)
+ti.init(arch=ti.cuda, kernel_profiler=True, device_memory_GB =3.5)
 
 ADVECT_REDISTANCE = 0
 MARKERS = 1
@@ -26,7 +26,7 @@ class FluidSimulator:
     def __init__(self,
         dim = 2,
         res = (128, 128),
-        dt = 0.75e-2,
+        dt = 1.25e-2,
         substeps = 1,
         dx = 1.0,
         rho = 1000.0,
