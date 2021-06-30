@@ -193,6 +193,7 @@ class FluidSimulator:
     def apply_pressure(self, dt : ti.f32):
         scale = dt / (self.rho * self.dx)
 
+
         for k in ti.static(range(self.dim)):
             for I in ti.grouped(self.cell_type):
                 I_1 = I - ti.Vector.unit(self.dim, k)
@@ -211,7 +212,22 @@ class FluidSimulator:
                             self.velocity[k][I] -= scale * (self.pressure[I] - self.p0) * min(c, 1e3)
                         else: self.velocity[k][I] -= scale * (self.pressure[I] - self.p0)
                     # Fluid-Fluid
-                    else: self.velocity[k][I] -= scale * (self.pressure[I] - self.pressure[I_1])
+                        
+           
+                    else: 
+                        grad_v = ti.Vector.zero(self.real, self.dim)
+                        N= 1.334 #corn starch values 
+                        K =  14.21
+                        e = ti.Matrix.zero(self.real,self.dim,self.dim) #(1/2*(diff(k)/diff(I)+diff(I)/diff(k)
+                        jacobian = ti.Matrix.zero(self.real,self.dim,self.dim)
+                        for j in ti.static(range(self.dim)):
+                       
+                            for i in ti.static(range(self.dim)):
+                                jacobian[i,j] =  (self.velocity[i][I + ti.Vector.unit(self.dim, j)] - self.velocity[i][I - ti.Vector.unit(self.dim, j)])/(2*self.dx)
+                        e=1/2 * (jacobian.transpose() + jacobian) 
+                                     
+                        u = K*abs(2*e*e)**((N-1)/2)
+                        self.velocity[k][I] -= (scale * (self.pressure[I] - self.pressure[I_1]))/u
 
     @ti.func
     def advect(self, I, dst, src, offset, dt):

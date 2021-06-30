@@ -53,24 +53,7 @@ class APICSimulator(FluidSimulator):
         for p in range(self.total_mk[None]):
             self.p_v[p] = self.vel_interp(self.p_x[p])
             for k in ti.static(range(self.dim)):
-
-                grad_v = ti.Vector.zero(self.real, self.dim)
-                N= 1.5 #change this after we just need a constant for now 
-                e = ti.Matrix.zero(self.real,self.dim,self.dim) #(1/2*(diff(k)/diff(I)+diff(I)/diff(k))
-
-                for g in ti.static(range(self.dim)):
-                    #normal= -grad_v[k]
-                    gradient_k = (self.velocity[k][p + ti.Vector.unit(self.dim, k)] - self.velocity[k][p])/ self.dx
-                    grad_v[k][p] = gradient_k
-                    K = np.where(grad_v[k][p]==1)    
-                    
-                    for j in ti.static(range(self.dim)):
-                       
-                        for i in ti.static(range(self.dim)):
-                            
-                            e[i,j]=1/2 * (gradient_k)  
-                    u = K*abs(2*e[i,j]*e[i,j])**((N-1)/2)
-                self.p_cp[k][p] = self.apic_c(0.5 * (1 - ti.Vector.unit(self.dim, k))/u, self.p_x[p], self.velocity[k])
+                self.p_cp[k][p] = self.apic_c(0.5 * (1 - ti.Vector.unit(self.dim, k)), self.p_x[p], self.velocity[k])
 
     @ti.kernel
     def transfer_to_grid(self):
