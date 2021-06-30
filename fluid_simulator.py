@@ -28,7 +28,7 @@ class FluidSimulator:
         res = (128, 128),
         dt = 0.75e-2,
         substeps = 1,
-        dx = 0.5,
+        dx = 1.0,
         rho = 1000.0,
         gravity = [0, -9.8],
         p0 = 1e-3,
